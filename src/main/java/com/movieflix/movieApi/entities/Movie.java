@@ -2,10 +2,17 @@ package com.movieflix.movieApi.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+
 public class Movie {
 
     @Id
@@ -30,7 +37,7 @@ public class Movie {
 
     @Column(nullable = false)
     @NotBlank(message = "Please provide movie's release year")
-    private Integer releasYear;
+    private Integer releaseYear;
 
     @Column(nullable = false)
     @NotBlank(message = "Please provide movie's poster")
