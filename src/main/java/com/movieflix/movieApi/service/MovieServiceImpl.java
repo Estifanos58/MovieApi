@@ -9,35 +9,35 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class MovieServiceImpl implements MovieService{
+public class MovieServiceImpl implements MovieService {
 
-    private  final FileService fileService;
+    private final FileService fileService;
+    private final MovieRepository movieRepository;
 
-    private  final MovieRepository movieRepository;
-
-    public MovieServiceImpl(MovieRepository movieRepository, FileService fileService){
-        this.movieRepository = movieRepository;
-        this.fileService = fileService;
-    }
-
+    // Property injection for folder path and base URL
     @Value("${project.poster}")
     private String path;
 
     @Value("${base.url}")
     private String baseurl;
 
+    public MovieServiceImpl(MovieRepository movieRepository, FileService fileService) {
+        this.movieRepository = movieRepository;
+        this.fileService = fileService;
+    }
+
     @Override
     public Moviedto addMovie(Moviedto moviedto, MultipartFile file) throws IOException {
-
-        // 1. upload the file
+        // 1. Upload the file
         String uploadedFileName = fileService.uploadFile(path, file);
 
-        // 2. set the value of field 'poster' as filename
+        // 2. Set the value of field 'poster' as filename
         moviedto.setPoster(uploadedFileName);
 
-        // 3. map dto to movie object
+        // 3. Map DTO to Movie entity
         Movie movie = new Movie(
                 moviedto.getMovieId(),
                 moviedto.getTitle(),
@@ -48,13 +48,13 @@ public class MovieServiceImpl implements MovieService{
                 moviedto.getPoster()
         );
 
-        // 4. save the movie object -> saved movie object
+        // 4. Save the movie object
         Movie savedMovie = movieRepository.save(movie);
 
-        // 5. generate the posterUrl
+        // 5. Generate the poster URL
         String posterUrl = baseurl + "/file/" + uploadedFileName;
 
-        // 6. map movie object to DTO object and return it
+        // 6. Map saved Movie object to DTO and return
         Moviedto response = new Moviedto(
                 savedMovie.getMovieId(),
                 savedMovie.getTitle(),
@@ -62,7 +62,7 @@ public class MovieServiceImpl implements MovieService{
                 savedMovie.getStudio(),
                 savedMovie.getMovieCast(),
                 savedMovie.getReleaseYear(),
-                savedMovie.getPoster(),
+                savedMovie.getPoster(),  // which should be the uploaded file name
                 posterUrl
         );
 
@@ -71,11 +71,33 @@ public class MovieServiceImpl implements MovieService{
 
     @Override
     public Moviedto getMovie(Integer movieId) {
-        return null;
+        return movieRepository.findById(movieId)
+                .map(savedMovie -> new Moviedto(
+                        savedMovie.getMovieId(),
+                        savedMovie.getTitle(),
+                        savedMovie.getDirector(),
+                        savedMovie.getStudio(),
+                        savedMovie.getMovieCast(),
+                        savedMovie.getReleaseYear(),
+                        savedMovie.getPoster(),  // using saved poster filename
+                        baseurl + "/file/" + savedMovie.getPoster()
+                ))
+                .orElse(null); // Handle not found appropriately
     }
 
     @Override
     public List<Moviedto> getAllMovies() {
-        return List.of();
+        return movieRepository.findAll().stream()
+                .map(savedMovie -> new Moviedto(
+                        savedMovie.getMovieId(),
+                        savedMovie.getTitle(),
+                        savedMovie.getDirector(),
+                        savedMovie.getStudio(),
+                        savedMovie.getMovieCast(),
+                        savedMovie.getReleaseYear(),
+                        savedMovie.getPoster(),
+                        baseurl + "/file/" + savedMovie.getPoster()
+                ))
+                .collect(Collectors.toList());
     }
 }

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Set;
 
@@ -16,6 +17,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class Moviedto {
 
+    @Setter
     private Integer movieId;
 
     @NotBlank(message = "Please provide movie's title")
@@ -36,4 +38,5 @@ public class Moviedto {
 
     @NotBlank(message = "Please provide poser's url")
     private String posterUrl;
+
 }
